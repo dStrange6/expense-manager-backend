@@ -2,11 +2,14 @@ package com.iconcile.expensemanager.controller;
 
 import com.iconcile.expensemanager.dto.ExpenseRequest;
 import com.iconcile.expensemanager.dto.ExpenseResponse;
+import com.iconcile.expensemanager.entity.Category;
+import com.iconcile.expensemanager.service.CategorizationService;
 import com.iconcile.expensemanager.service.ExpenseService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/expenses")
@@ -14,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 public class ExpenseController {
 
     private final ExpenseService expenseService;
+    private final CategorizationService categorizationService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -31,5 +35,14 @@ public class ExpenseController {
         }
 
         return expenseService.getExpensesByMonth(month);
+    }
+    // new feature to suggest category based on vendor name in the frontend
+    @GetMapping("/suggest-category")
+    public Map<String, String> suggestCategory(@RequestParam String vendor) {
+        if (vendor == null || vendor.isBlank()) {
+            return Map.of("categoryName", "Uncategorised");
+        }
+        Category category = categorizationService.determineCategory(vendor);
+        return Map.of("categoryName", category.getName());
     }
 }
