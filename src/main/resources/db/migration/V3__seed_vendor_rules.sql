@@ -11,7 +11,6 @@ INSERT INTO vendor_category_rules (vendor_pattern, match_type, priority, categor
     ('uber', 'EXACT', 1, (SELECT id FROM cats WHERE name = 'Travel')),
     ('uber eats', 'EXACT', 1, (SELECT id FROM cats WHERE name = 'Food')),
     ('apollo', 'CONTAINS', 1, (SELECT id FROM cats WHERE name = 'Healthcare')),
-    ('hdfc', 'PREFIX', 2, (SELECT id FROM cats WHERE name = 'Banking')),
     ('indian oil', 'CONTAINS', 1, (SELECT id FROM cats WHERE name = 'Fuel')),
     ('jio', 'CONTAINS', 1, (SELECT id FROM cats WHERE name = 'Utilities')),
     ('airtel', 'CONTAINS', 1, (SELECT id FROM cats WHERE name = 'Utilities'));
