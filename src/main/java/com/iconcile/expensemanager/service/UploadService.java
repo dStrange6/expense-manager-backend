@@ -34,7 +34,6 @@ public class UploadService {
 
     @Transactional
     public BatchUploadResult processCsv(MultipartFile file) {
-        // create a tracking record in the database for this upload attempt
         UploadBatch batch = new UploadBatch();
         batch.setFilename(file.getOriginalFilename());
         batch.setStatus("PROCESSING");
@@ -44,28 +43,24 @@ public class UploadService {
         List<RowError> errors = new ArrayList<>();
         int totalRows = 0;
 
-        // read the CSV file
         try (Reader reader = new InputStreamReader(file.getInputStream());
              CSVReader csvReader = new CSVReader(reader)) {
 
-            String[] header = csvReader.readNext(); // Skip the header row
+            String[] header = csvReader.readNext();
             if (header == null) throw new IllegalArgumentException("CSV file is empty");
 
             String[] line;
-            int rowNum = 1; // Start at 1 because row 1 was the header so we exclude it from the count
+            int rowNum = 1;
 
-            // Loop through every row in the file
             while ((line = csvReader.readNext()) != null) {
                 rowNum++;
                 totalRows++;
 
-                // If a row is missing columns, log an error and skip to the next row
                 if (line.length < 3) {
                     errors.add(new RowError(rowNum, "Missing required columns (Date, Amount, Vendor)"));
                     continue;
                 }
 
-                // Try to parse and validate the row
                 try {
                     LocalDate date = LocalDate.parse(line[0].trim());
                     BigDecimal amount = new BigDecimal(line[1].trim());
@@ -76,11 +71,11 @@ public class UploadService {
 
                     String description = line.length > 3 ? line[3].trim() : null;
 
-                    // Apply our Business Logic (Categorization & Anomaly check)
                     Category category = categorizationService.determineCategory(vendor);
+
+                    // anomaly check runs before save so this expense isn't included in its own average
                     boolean isAnomaly = anomalyService.isAnomaly(amount, category.getId());
 
-                    // Build the Entity
                     Expense expense = new Expense();
                     expense.setExpenseDate(date);
                     expense.setAmount(amount);
@@ -91,7 +86,6 @@ public class UploadService {
                     expense.setAnomaly(isAnomaly);
                     expense.setUploadBatch(batch);
 
-                    // Add to our list of good rows
                     validExpenses.add(expense);
 
                 } catch (DateTimeParseException e) {
@@ -103,19 +97,16 @@ public class UploadService {
                 }
             }
 
-            // Bulk save all valid rows to the db
             if (!validExpenses.isEmpty()) {
                 expenseRepository.saveAll(validExpenses);
             }
 
-            // Update the batch record with final success/failure stats
             batch.setTotalRows(totalRows);
             batch.setSuccessRows(validExpenses.size());
             batch.setFailedRows(errors.size());
             batch.setStatus(errors.isEmpty() ? "COMPLETED" : "COMPLETED_WITH_ERRORS");
             batchRepository.save(batch);
 
-            // Return the "receipt" to the frontend
             return new BatchUploadResult(
                     batch.getId(),
                     totalRows,
