@@ -2,8 +2,6 @@ name: Expense Manager CI
 
 on:
   push:
-    paths:
-      - /**
     branches:
       - '**'
 
