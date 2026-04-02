@@ -5,7 +5,7 @@ Please find the frontend code here: https://github.com/dStrange6/expense-manager
 Tech stack used:
 -
 - Backend : Java 21, Spring Boot, Spring Data JPA, Flyway
-- Frontend : React, TypeScript, Tailwind CSS, Vite
+- Frontend : React, TypeScript, Tailwind, Vite
 - Database : PostgreSQL
 
 Pre-requisites:
